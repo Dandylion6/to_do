@@ -20,7 +20,8 @@ pub fn get_list_paths() -> Vec<String> {
 }
 
 pub fn load_list(name: &str) -> CheckList {
-    let file_path: String = "saves/".to_string() + name + ".txt";
+    let file_name: String = name.replace("_", " ");
+    let file_path: String = "saves/".to_string() + file_name.as_str() + ".todo";
     let decoded: Vec<u8> = BASE64_STANDARD
         .decode(fs::read(file_path).unwrap())
         .unwrap();
@@ -58,7 +59,8 @@ pub fn load_list(name: &str) -> CheckList {
 }
 
 pub fn save_list(list: &CheckList) {
-    let file_path: String = "saves/".to_string() + list.get_title() + ".txt";
+    let file_name: String = list.get_title().replace(" ", "_");
+    let file_path: String = "saves/".to_string() + file_name.as_str() + ".todo";
     let mut file: File = File::create(file_path).unwrap();
 
     let iterator: Iter<'_, Task> = list.get_tasks().into_iter();
