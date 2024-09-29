@@ -11,4 +11,8 @@ impl Task {
     pub fn get_description(&self) -> &str {
         return self.description.as_str();
     }
+
+    pub fn is_done(&self) -> bool {
+        return self.done;
+    }
 }
