@@ -5,5 +5,6 @@ pub mod task;
 pub mod writer;
 
 fn main() {
-    program::start();
+    writer::program_start();
+    program::startup();
 }

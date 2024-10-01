@@ -1,7 +1,7 @@
 use core::str;
 use std::{
     fs::{self, File, ReadDir},
-    io::{self, Write},
+    io::Write,
     path::{Path, PathBuf},
     slice::Iter,
 };
@@ -61,7 +61,7 @@ pub fn get_list_names() -> Vec<String> {
 
 pub fn load_list(name: &str) -> CheckList {
     let file_name: String = name.replace(" ", "_");
-    let file_path: PathBuf = get_saves_path().join(file_name.as_str()).join(".todo");
+    let file_path: PathBuf = get_saves_path().join(file_name + ".todo");
     let decoded: Vec<u8> = BASE64_STANDARD
         .decode(fs::read(file_path).unwrap())
         .unwrap();
@@ -100,7 +100,7 @@ pub fn load_list(name: &str) -> CheckList {
 
 pub fn save_list(list: &CheckList) {
     let file_name: String = list.get_title().replace(" ", "_");
-    let file_path: String = "saves/".to_string() + file_name.as_str() + ".todo";
+    let file_path: PathBuf = get_saves_path().join(file_name + ".todo");
     let mut file: File = File::create(file_path).unwrap();
 
     let iterator: Iter<'_, Task> = list.get_tasks().into_iter();

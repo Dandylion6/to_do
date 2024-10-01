@@ -1,29 +1,31 @@
 use std::io::{stdin, stdout, Write};
 
 use crate::{
-    check_list::CheckList,
-    file_save,
-    writer::{self, clear_terminal},
+    check_list::CheckList, file_save, task::Task, writer::{self, clear}
 };
 
-pub fn start() {
-    writer::program_start();
-    check_list_menu();
-}
-
-fn get_input() -> String {
-    print!("\nYour input: ");
-    std::io::stdout().flush().unwrap();
+pub fn get_input() -> String {
+    print!("\n> ");
+    stdout().flush().unwrap();
 
     let mut input: String = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
+    stdin().read_line(&mut input).unwrap();
     return input.trim().to_string().to_lowercase();
 }
 
-fn check_list_menu() {
+pub fn startup() {
+    get_input();
+    check_list_menu();
+}
+
+pub fn check_list_menu() {
     let list_names: Vec<String> = file_save::get_list_names();
 
+    clear();
     writer::show_check_lists(&list_names);
+    if list_names.is_empty() {
+        writer::empty_container("check lists");
+    }
     writer::exit_program_option();
 
     let input: String = get_input();
@@ -34,14 +36,28 @@ fn check_list_menu() {
             let index: usize = input.parse::<usize>().unwrap();
             try_open_list(index, &list_names);
         }
-        _ => {
-            clear_terminal();
-            check_list_menu();
-        }
+        _ => check_list_menu(),
     }
 }
 
-fn create_new_list() {}
+fn create_new_list() {
+    clear();
+    writer::ask_name_of("check list");
+    writer::return_option("check lists");
+    writer::exit_program_option();
+
+    let input: String = get_input();
+    match input.as_str() {
+        "exit" => return,
+        "back" => check_list_menu(),
+        _ if input.is_empty() => create_new_list(),
+        _ => {
+            let new_list = CheckList::new(&input);
+            file_save::save_list(&new_list); // Save newly created list
+            open_list(&input);
+        }
+    }
+}
 
 fn try_open_list(index: usize, file_names: &Vec<String>) {
     let mut failed: bool = false;
@@ -50,7 +66,6 @@ fn try_open_list(index: usize, file_names: &Vec<String>) {
     }
 
     if failed {
-        clear_terminal();
         check_list_menu();
     } else {
         let file_name: &String = file_names.get(index - 1).unwrap();
@@ -60,9 +75,13 @@ fn try_open_list(index: usize, file_names: &Vec<String>) {
 
 fn open_list(file_name: &str) {
     let list: CheckList = file_save::load_list(file_name);
-    clear_terminal();
+    let tasks: &Vec<Task> = list.get_tasks();
+    clear();
 
-    writer::show_list_tasks(&list.get_tasks());
+    if tasks.is_empty() {
+        writer::empty_container("tasks");
+    }
+    writer::show_list_tasks(&tasks);
     writer::return_option("check lists");
 
     let input: String = get_input();

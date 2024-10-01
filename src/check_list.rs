@@ -6,6 +6,13 @@ pub struct CheckList {
 }
 
 impl CheckList {
+    pub fn new(title: &str) -> Self {
+        return Self {
+            title: title.to_string(),
+            tasks: Vec::new(),
+        };
+    }
+
     pub fn load(title: &str, tasks: Vec<Task>) -> Self {
         return Self {
             title: title.to_string(),
@@ -19,5 +26,9 @@ impl CheckList {
 
     pub fn get_tasks(&self) -> &Vec<Task> {
         return &self.tasks;
+    }
+
+    pub fn add_task(&mut self, task: Task) {
+        self.tasks.push(task);
     }
 }

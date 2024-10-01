@@ -1,13 +1,27 @@
-use std::io::Write;
+use std::io::{stdout, Write};
 
 use crate::task::Task;
 
 pub fn program_start() {
-    println!("== Welcome to TO DO ==\n");
+    let title: &str = r#"
+ _       __     __                             __           __________           ____  ____  __
+| |     / /__  / /________  ____ ___  ___     / /_____     /_  __/ __ \         / __ \/ __ \/ /
+| | /| / / _ \/ / ___/ __ \/ __ `__ \/ _ \   / __/ __ \     / / / / / /  ______/ / / / / / / / 
+| |/ |/ /  __/ / /__/ /_/ / / / / / /  __/  / /_/ /_/ /    / / / /_/ /  /_____/ /_/ / /_/ /_/  
+|__/|__/\___/_/\___/\____/_/ /_/ /_/\___/   \__/\____/    /_/  \____/        /_____/\____(_)   
+                                                                                               "#;
+    println!("{title}");
+    println!("\nPlease press 'enter' to continue...");
 }
 
-pub fn clear_terminal() {
-    print!("{}[2J", 27 as char);
+pub fn clear() {
+    print!("\x1B[2J\x1B[1;1H");
+    stdout().flush().unwrap();
+}
+
+pub fn ask_name_of(element: &str) {
+    clear();
+    println!("Please give new {element} a name.\n");
 }
 
 pub fn show_check_lists(lists: &Vec<String>) {
@@ -28,6 +42,10 @@ pub fn add_element_option(element: &str) {
     println!("To add a new {element}, enter 'add'.");
 }
 
+pub fn empty_container(element: &str) {
+    println!("Uh oh! looks like you have no {element}, maybe try adding some?");
+}
+
 pub fn return_option(return_to: &str) {
     println!("To go to {return_to}, enter 'back'.");
 }
@@ -43,6 +61,6 @@ pub fn show_list_tasks(tasks: &Vec<Task>) {
         i += 1;
     });
 
-    println!();
+    println!("");
     add_element_option("task");
 }
