@@ -2,6 +2,7 @@ use core::str;
 use std::{
     fs::{self, File, ReadDir},
     io::{self, Write},
+    path::{Path, PathBuf},
     slice::Iter,
 };
 
@@ -9,19 +10,58 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 
 use crate::{check_list::CheckList, task::Task};
 
-pub fn get_list_paths() -> Vec<String> {
-    let mut list_paths: Vec<String> = Vec::new();
-    let paths: ReadDir = fs::read_dir("saves/").unwrap();
+fn get_saves_path() -> PathBuf {
+    let exe_path: PathBuf = std::env::current_exe().expect("Failed to get current executable path");
+    let exe_directory: &Path = exe_path.parent().expect("Failed to get parent directory");
+    let saves_path: PathBuf = exe_directory.join("saves");
 
-    paths.for_each(|path: Result<fs::DirEntry, io::Error>| {
-        list_paths.push(path.unwrap().file_name().into_string().unwrap());
-    });
-    return list_paths;
+    // Check if the "saves/" directory exists
+    if !saves_path.exists() {
+        // Create the directory if it does not exist
+        if let Err(err) = fs::create_dir(&saves_path) {
+            eprintln!("Failed to create 'saves/' directory: {}", err);
+            return saves_path;
+        }
+    }
+    return saves_path;
+}
+
+pub fn get_list_names() -> Vec<String> {
+    let mut list_paths: Vec<String> = Vec::new();
+    let saves_path: PathBuf = get_saves_path();
+
+    // Try reading the directory and handle the error
+    let paths: ReadDir = match fs::read_dir(saves_path) {
+        Ok(paths) => paths,
+        Err(err) => {
+            eprintln!("Error reading saves directory: {}", err);
+            return list_paths; // Return an empty list if there's an error
+        }
+    };
+
+    // Iterate over directory entries
+    for path in paths {
+        match path {
+            Ok(entry) => {
+                let mut file_name = entry
+                    .file_name()
+                    .into_string()
+                    .unwrap_or_else(|_| String::new());
+                file_name = file_name.replace(".todo", "");
+                list_paths.push(file_name.replace("_", " "));
+            }
+            Err(err) => {
+                eprintln!("Error reading directory entry: {}", err);
+            }
+        }
+    }
+
+    return list_paths; // Return the populated list
 }
 
 pub fn load_list(name: &str) -> CheckList {
-    let file_name: String = name.replace("_", " ");
-    let file_path: String = "saves/".to_string() + file_name.as_str() + ".todo";
+    let file_name: String = name.replace(" ", "_");
+    let file_path: PathBuf = get_saves_path().join(file_name.as_str()).join(".todo");
     let decoded: Vec<u8> = BASE64_STANDARD
         .decode(fs::read(file_path).unwrap())
         .unwrap();
