@@ -28,7 +28,15 @@ impl CheckList {
         return &self.tasks;
     }
 
+    pub fn get_tasks_mut(&mut self) -> &mut Vec<Task> {
+        return &mut self.tasks;
+    }
+
     pub fn add_task(&mut self, task: Task) {
         self.tasks.push(task);
+    }
+
+    pub fn remove_task(&mut self, task_index: usize) {
+        self.tasks.remove(task_index);
     }
 }

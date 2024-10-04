@@ -1,6 +1,12 @@
-use std::io::{stdout, Write};
+use std::{
+    io::{stdout, Write},
+    str::FromStr,
+};
 
-use crate::task::Task;
+use crate::{
+    program::get_status_select_input,
+    task::{Status, Task},
+};
 
 pub fn program_start() {
     let title: &str = r#"
@@ -30,16 +36,23 @@ pub fn show_check_lists(lists: &Vec<String>) {
 
     let mut i: usize = 1;
     lists.iter().for_each(|list: &String| {
-        println!("{}. '{}'", i.to_string(), list);
+        println!("{}. {}", i.to_string(), list);
         i += 1;
     });
 
+    if lists.is_empty() {
+        empty_container("check lists");
+    }
     println!();
     add_element_option("check list");
 }
 
 pub fn add_element_option(element: &str) {
     println!("To add a new {element}, enter 'add'.");
+}
+
+pub fn delete_element_option(element: &str) {
+    println!("To delete this {element}, enter 'delete'");
 }
 
 pub fn empty_container(element: &str) {
@@ -55,12 +68,41 @@ pub fn exit_program_option() {
 }
 
 pub fn show_list_tasks(tasks: &Vec<Task>) {
+    println!("Please enter a number to modify a task.");
+    println!("Tasks:\n");
+
     let mut i: usize = 1;
     tasks.iter().for_each(|task: &Task| {
-        println!("{}. '{}'", i.to_string(), task.get_description());
+        let status: String = get_status_string(task.get_status());
+        println!("{}. {} - {}", i.to_string(), task.get_description(), status);
         i += 1;
     });
 
+    if tasks.is_empty() {
+        empty_container("tasks");
+    }
     println!("");
     add_element_option("task");
+}
+
+pub fn show_task_modify_options(task_name: &str) {
+    println!("Please enter a valid status for task '{}'.", task_name);
+    println!("Options:\n");
+    Status::into_iter(Status::Planned).for_each(|status: Status| {
+        println!(
+            "'{}' -> {}",
+            get_status_select_input(status),
+            get_status_string(status)
+        );
+    });
+    println!("");
+}
+
+fn get_status_string(status: Status) -> String {
+    match status {
+        Status::Planned => return String::from_str("PLANNED").unwrap(),
+        Status::Doing => return String::from_str("DOING").unwrap(),
+        Status::Done => return String::from_str("DONE").unwrap(),
+        Status::Cancelled => return String::from_str("CANCELLED").unwrap(),
+    }
 }

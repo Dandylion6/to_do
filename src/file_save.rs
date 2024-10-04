@@ -8,7 +8,10 @@ use std::{
 
 use base64::{prelude::BASE64_STANDARD, Engine};
 
-use crate::{check_list::CheckList, task::Task};
+use crate::{
+    check_list::CheckList,
+    task::{Status, Task},
+};
 
 fn get_saves_path() -> PathBuf {
     let exe_path: PathBuf = std::env::current_exe().expect("Failed to get current executable path");
@@ -70,18 +73,21 @@ pub fn load_list(name: &str) -> CheckList {
     let mut buffer: String = String::new();
 
     let mut is_value_field: bool = false;
-    let mut is_task_done: bool = false;
+    let mut task_status: Status = Status::Planned;
     for character in decoded {
         let is_task_end: bool = character == b';';
         let is_desc_end: bool = character == b':';
 
         if is_desc_end || is_task_end {
             if is_task_end {
-                tasks.push(Task::new(buffer.clone(), is_task_done));
+                let mut task: Task = Task::new(buffer.as_str(), name);
+                task.set_status(task_status);
+
+                tasks.push(task);
                 buffer.clear();
 
                 is_value_field = false;
-                is_task_done = false;
+                task_status = Status::Planned;
             } else if !is_value_field {
                 is_value_field = true;
             }
@@ -89,7 +95,7 @@ pub fn load_list(name: &str) -> CheckList {
         }
 
         if is_value_field && character.is_ascii_digit() {
-            is_task_done = (character - b'0') > 0;
+            task_status = Status::from_u8(character - b'0');
         } else {
             let char_string: char = character as char;
             buffer += char_string.to_string().as_str();
@@ -105,12 +111,20 @@ pub fn save_list(list: &CheckList) {
 
     let iterator: Iter<'_, Task> = list.get_tasks().into_iter();
     iterator.for_each(|task: &Task| {
-        let done_value: &str = if task.is_done() { "1" } else { "0" };
+        let status: Status = task.get_status();
         let mut encoded: String = String::new();
         BASE64_STANDARD.encode_string(
-            task.get_description().to_string() + ":" + done_value + ";",
+            task.get_description().to_string() + ":" + status.to_str() + ";",
             &mut encoded,
         );
         file.write_all(encoded.as_bytes()).unwrap();
     });
+}
+
+pub fn delete_list(list: &CheckList) {
+    let file_name: String = list.get_title().replace(" ", "_");
+    let file_path: PathBuf = get_saves_path().join(file_name + ".todo");
+    if file_path.exists() {
+        fs::remove_file(file_path).unwrap();
+    }
 }
