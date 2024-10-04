@@ -19,7 +19,4 @@ A simple command-line To-Do application written in Rust. This tool allows users 
 
 ## Installation
 
-1. Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/Dandylion6/to_do.git
+Go to the latest [release](https://github.com/Dandylion6/to_do/releases) and follow instructions there.
